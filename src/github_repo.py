@@ -1,6 +1,6 @@
 import subprocess
+import shutil
 from pathlib import Path
-
 from github import Auth, Github
 
 class GitHubRepo:
@@ -19,18 +19,31 @@ class GitHubRepo:
             "https://", f"https://x-access-token:{token}@", 1
         )
 
+    @property
+    def default_branch(self) -> str:
+        return self._repo.default_branch
+
     @staticmethod
     def _to_full_name(repo: str) -> str:
         return repo.removeprefix("https://github.com/").removesuffix(".git").strip("/")
 
     def clone(self, dest: Path) -> Path:
-        """Clone the repo into `dest`"""
-        if (dest / ".git").exists():
-            return dest
+        """Clone the repo into `dest`, optionally checking out a specific tag or branch `ref`."""
+        if (dest).exists():
+            try:
+                shutil.rmtree(dest)
+            except OSError as ex:
+                print(ex)
+
+        cmd = ["git", "clone"]
+
+        cmd += [self._clone_url, str(dest)]
+
         subprocess.run(
-            ["git", "clone", self._clone_url, str(dest)],
+            cmd,
             check=True,
             capture_output=True,
             text=True,
         )
+
         return dest
