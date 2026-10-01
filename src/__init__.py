@@ -1,124 +1,75 @@
-
 import os
-import asyncio
+import logging
+from datetime import datetime, timezone
 from pathlib import Path
-from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, AssistantMessage, query
 from dotenv import load_dotenv
-from src.github_repo import GitHubRepo
-from src.observability import langfuse, observe, propagate_attributes
-from src.utils import show_spinner
 
 load_dotenv()
 
-@observe(name="watchdog-autofix")
-async def main():
-    token = os.environ["GIT_AUTH_TOKEN"]
-    repo = GitHubRepo(os.environ["GIT_REPO_NAME"], token=token)
-    workdir = repo.clone(
-        Path(os.environ["GIT_LOCAL_REPO_PATH"])
-    )
-    model_used = None
-    result = None
-    spinner = asyncio.create_task(show_spinner())
+# Popped before the imports below, so the agent subprocess never inherits the token.
+GIT_AUTH_TOKEN = os.environ.pop("GIT_AUTH_TOKEN", None)
+
+from src.agent import run_agent
+from src.observability import langfuse, trace_issue
+from src.github_repo import GitHubRepo
+from src.progress import step, track_issue
+from src.workspace import temp_workdir
+
+logger = logging.getLogger(__name__)
+
+
+async def main() -> str | None:
+    """Try to fix the issue: returns the PR URL, or None if the agent had nothing to change.
+
+    Raises `AgentFailed` when the agent itself fails.
+    """
+    if not GIT_AUTH_TOKEN:
+        raise RuntimeError("GIT_AUTH_TOKEN is not set")
     issue = error["data"]["issue"]
-
-    options = ClaudeAgentOptions(
-        model="claude-sonnet-5",
-        cwd=str(workdir.resolve()),
-        max_turns=200,
-        permission_mode="bypassPermissions",
-        allowed_tools=[
-            "Read",
-            "Glob",
-            "Grep",
-            "Write",
-            "Edit",
-            "Bash",
-            "mcp__github",  # all tools from the github server, incl. create_pull_request
-        ],
-        system_prompt={
-            "type": "preset",
-            "preset": "claude_code",  # Use Claude Code's system prompt
-        },
-        setting_sources=[], # avoid using local CLI configurations
-        mcp_servers={
-            "github": {
-                "type": "http",
-                "url": "https://api.githubcopilot.com/mcp/",
-                "headers": {"Authorization": f"Bearer {token}"},
-            },
-        },
-    )
-
-    langfuse.update_current_span(
-        input={
-            "issue": issue["shortId"],
-            "repo": repo.full_name,
-            "title": issue["title"],
-        },
-    )
-
-    try:
-        with propagate_attributes(
-            session_id=issue["shortId"],
-            tags=["watchdog"],
-            metadata={"repo": repo.full_name, "issue_title": issue["title"]},
-        ):
-            async for message in query(
-                prompt=make_prompt(repo, error),
-                options=options,
-            ):
-                if isinstance(message, AssistantMessage):
-                    model_used = message.model
-                if isinstance(message, ResultMessage):
-                    spinner.cancel()
-                    await asyncio.gather(spinner, return_exceptions=True)
-
-                    if not message.is_error:
-                        result = message.result
-                    usage = message.usage or {}
-                    total_tokens = sum(v for v in usage.values() if isinstance(v, int))
-                    langfuse.update_current_span(
-                        metadata={
-                            "model": model_used,
-                            "total_tokens": total_tokens,
-                            "usage": usage,
-                            "cost_usd": message.total_cost_usd,
-                        },
-                    )
-    finally:
-        if not spinner.done():
-            spinner.cancel()
-            await asyncio.gather(spinner, return_exceptions=True)
-        langfuse.flush()
-
-    return result
+    with (
+        track_issue(issue['shortId'], issue['title']) as tracked,
+        trace_issue(issue, tags=["deliver"]) as trace,
+        temp_workdir() as workdir,
+    ):
+        with step("connecting to GitHub", tool="connect github") as connect:
+            repo = GitHubRepo(os.environ["GIT_REPO_NAME"], token=GIT_AUTH_TOKEN)
+            connect.output = {"repo": repo.full_name, "default_branch": repo.default_branch}
+        with step(f"cloning {repo.full_name} at {BUGGY_REF}", tool="clone repo") as clone:
+            repo.clone(workdir, ref=BUGGY_REF)
+            clone.output = {"path": str(workdir), "ref": BUGGY_REF}
+        pr_url = await autofix(repo, workdir, error)
+        tracked.status = "resolved" if pr_url else "unchanged"
+        trace.update(output={"pr_url": pr_url})
+        return pr_url
 
 
+async def autofix(repo: GitHubRepo, workdir: Path, event: dict) -> str | None:
+    issue = event["data"]["issue"]
+    with step("agent working"):
+        outcome = await run_agent(workdir, event)
 
-def make_prompt(repo, error):
-    owner, name = repo.full_name.split("/", 1)
-    issue = error["data"]["issue"]
-    branch = f"fix/{issue['shortId'].lower()}"
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    branch = f"fix/{issue['shortId'].lower()}-{stamp}"
+    title = f"fix: {issue['title']} ({issue['shortId']})"
 
-    return f"""A Sentry issue was reported in the repository {repo.full_name}.
-            Issue:
-            - Title: {issue['title']}
-            - Culprit: {issue['culprit']}
-            - File: {issue['metadata'].get('filename')}
-            - Details: {issue['metadata'].get('value')}
+    with step("committing changes", tool="commit") as commit:
+        has_changes = repo.commit_all(workdir, branch, message=title)
+        commit.output = {"branch": branch, "committed": has_changes}
+    if not has_changes:
+        logger.info("agent made no changes; nothing to ship")
+        langfuse.create_event(name="no changes")
+        return None
+    with step(f"pushing {branch}", tool="push") as push:
+        repo.push(workdir, branch)
+        push.output = {"branch": branch}
+    with step("opening pull request", tool="open pull request") as pr:
+        pr_url = repo.open_pull_request(branch, title=title, body=outcome.result.result or "")
+        pr.output = {"pr_url": pr_url}
+    return pr_url
 
-            Do the following, in order:
-            1. Create a new branch off `{repo.default_branch}` named `{branch}`.
-            2. Write a failing test that reproduces the issue, then fix the issue so the test passes.
-            3. Run the test suite and confirm the failing test now passes and nothing else broke.
-            4. Commit your changes and push the branch `{branch}` to origin with `git push -u origin {branch}`.
-            5. Open a pull request using the `create_pull_request` tool with:
-            owner="{owner}", repo="{name}", head="{branch}", base="{repo.default_branch}",
-            a clear title referencing {issue['shortId']}, and a body summarizing the root cause and fix.
 
-            Return the URL of the pull request you created."""
-
+# `main` already has the fix for the hardcoded issue below, so run on the tag that has the bug.
+BUGGY_REF = "2-type-error-cannot-read-undefined"
 
 error = {
     "action": "created",
