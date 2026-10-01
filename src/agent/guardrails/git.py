@@ -40,8 +40,6 @@ async def deny_git_writes(input_data: dict[str, Any], tool_use_id: str | None, c
 
     if GIT_COMMAND.search(command) and not is_read_only_git(command):
         return deny(
-            "deny_git_writes",
-            {"command": command},
             "Only `git diff` and `git status` are allowed (no --output, redirects or $(...)); "
             "use `git diff -- <path>` to scope. The harness does all other git work.",
         )

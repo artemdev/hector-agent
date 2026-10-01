@@ -3,6 +3,10 @@ import os
 from collections.abc import Generator
 from contextlib import contextmanager
 
+from dotenv import load_dotenv
+
+load_dotenv()  # before the imports below: the Langfuse client reads the environment
+
 from langfuse import LangfuseChain, get_client, propagate_attributes
 from openinference.instrumentation.claude_agent_sdk import ClaudeAgentSDKInstrumentor
 

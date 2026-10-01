@@ -10,7 +10,6 @@ from evals.harness.checks import (check_agent_test, check_is_agent_changed_files
 from evals.harness.models import Case, load_cases
 from evals.harness.security_judge import check_security_with_llm
 from evals.harness.workspace import install_npm_deps
-from src import GIT_AUTH_TOKEN
 from src.agent import AgentRun, run_agent
 from src.observability import trace_issue
 from src.github_repo import GitHubRepo
@@ -25,9 +24,11 @@ pytestmark = [pytest.mark.eval, pytest.mark.usefixtures("agent_run")]
 
 @pytest.fixture(scope="session")
 def fixture_repo() -> GitHubRepo:
-    if not GIT_AUTH_TOKEN:
+    # Popped before any case runs the agent, so the agent never inherits it.
+    git_token = os.environ.pop("GIT_AUTH_TOKEN", None)
+    if not git_token:
         pytest.skip("GIT_AUTH_TOKEN is not set")
-    return GitHubRepo(os.environ["GIT_REPO_NAME"], token=GIT_AUTH_TOKEN)
+    return GitHubRepo(os.environ["GIT_REPO_NAME"], token=git_token)
 
 
 @pytest.fixture(scope="module", params=[

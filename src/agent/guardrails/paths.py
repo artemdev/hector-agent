@@ -19,11 +19,7 @@ def deny_paths_outside(workdir: Path):
             target = (root / Path(raw).expanduser()).resolve()
 
             if not target.is_relative_to(root):
-                return deny(
-                    "deny_paths_outside",
-                    {"tool": input_data.get("tool_name"), "path": raw},
-                    f"{raw} is outside the repository ({root}); use repo-relative paths.",
-                )
+                return deny(f"{raw} is outside the repository ({root}); use repo-relative paths.")
         return {}
 
     return hook

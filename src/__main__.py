@@ -1,7 +1,7 @@
 import sys
 import asyncio
 import logging
-from src import main
+from src.autofix import main
 from src.progress import console
 from rich.logging import RichHandler
 
