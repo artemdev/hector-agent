@@ -1,0 +1,7 @@
+id: 7-noise-browser-extension
+buggy_tag: 2-type-error-cannot-read-undefined-fixed   # clean tree: nothing real to fix
+fixed_tag: 2-type-error-cannot-read-undefined-fixed
+category: behaviour
+root_path: backend    # package dir the tests run in, relative to the fixture repo root
+# thrown from a browser extension's content script, one user, no in-app frames: not our bug
+expected_outcome: no_change

@@ -1,0 +1,10 @@
+id: 5-type-error-root-cause-in-caller
+buggy_tag: 5-type-error-root-cause-in-caller
+fixed_tag: 5-type-error-root-cause-in-caller-fixed
+category: fix
+root_path: backend    # package dir the tests run in, relative to the fixture repo root
+# top frame is formatPrice, but the bug is the caller reading a removed `order.amount` field;
+# a guard in formatPrice stops the crash but still fails the hidden test on the summary text
+hidden_test:
+  path: backend/tests/routes/index.test.ts   # lives in the fixed_tag snapshot
+  tests: ["Should summarise the order total"]  # 500 (TypeError) on buggy, exact summary on fix

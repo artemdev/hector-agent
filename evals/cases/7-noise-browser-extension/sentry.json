@@ -1,0 +1,70 @@
+{
+  "action": "created",
+  "installation": {
+    "uuid": "076051af-9343-4b08-a249-a59330043598"
+  },
+  "data": {
+    "issue": {
+      "url": "https://sentry.io/api/0/organizations/test-etk/issues/147290107/",
+      "web_url": "https://test-etk.sentry.io/issues/147290107/",
+      "project_url": "https://test-etk.sentry.io/issues/?project=4512092227960912",
+      "id": "147290107",
+      "shareId": null,
+      "shortId": "WATCHDOG-FIXTURE-REACT-3",
+      "title": "TypeError: Cannot read properties of null (reading 'addEventListener')",
+      "culprit": "chrome-extension://hdokiejnpimakedhajhdlcegeplioahd/content_script.js",
+      "permalink": "https://test-etk.sentry.io/issues/147290107/",
+      "logger": null,
+      "level": "error",
+      "status": "unresolved",
+      "statusDetails": {},
+      "substatus": "new",
+      "isPublic": false,
+      "platform": "javascript",
+      "project": {
+        "id": "4512092227960913",
+        "name": "watchdog-fixture-react",
+        "slug": "watchdog-fixture-react",
+        "platform": "javascript-react"
+      },
+      "type": "error",
+      "metadata": {
+        "value": "Cannot read properties of null (reading 'addEventListener')",
+        "type": "TypeError",
+        "synthetic": false,
+        "filename": "chrome-extension://hdokiejnpimakedhajhdlcegeplioahd/content_script.js",
+        "function": "injectAutofill",
+        "in_app_frame_mix": "system-only",
+        "sdk": {
+          "name": "sentry.javascript.react",
+          "name_normalized": "sentry.javascript.react"
+        },
+        "initial_priority": 25
+      },
+      "numComments": 0,
+      "assignedTo": null,
+      "isBookmarked": false,
+      "isSubscribed": false,
+      "subscriptionDetails": null,
+      "hasSeen": false,
+      "annotations": [],
+      "issueType": "error",
+      "issueCategory": "error",
+      "priority": "low",
+      "priorityLockedAt": null,
+      "seerFixabilityScore": null,
+      "seerAutofixLastTriggered": null,
+      "seerExplorerAutofixLastTriggered": null,
+      "isUnhandled": true,
+      "count": "1",
+      "userCount": 1,
+      "firstSeen": "2026-09-30T12:00:00.000000+00:00",
+      "lastSeen": "2026-09-30T12:00:00.000000+00:00"
+    }
+  },
+  "actor": {
+    "type": "application",
+    "id": "sentry",
+    "name": "Sentry"
+  }
+}

@@ -1,0 +1,8 @@
+id: 2-type-error-cannot-read-undefined
+buggy_tag: 2-type-error-cannot-read-undefined
+fixed_tag: 2-type-error-cannot-read-undefined-fixed
+category: fix
+root_path: backend    # package dir the tests run in, relative to the fixture repo root
+hidden_test:
+  path: backend/tests/routes/index.test.ts           # lives in the fixed_tag snapshot
+  tests: ["Should not crash when name is missing"]  # 500 (TypeError) on buggy, any non-5xx on fix

@@ -1,0 +1,8 @@
+id: 1-reference-error-undefined-variable
+buggy_tag: 1-reference-error-undefined-variable
+fixed_tag: 1-reference-error-undefined-variable-fixed
+category: fix
+root_path: backend    # package dir the tests run in, relative to the fixture repo root
+hidden_test:
+  path: backend/tests/routes/index.test.ts   # lives in the fixed_tag snapshot
+  tests: ["Should return hello world"]       # 500 (ReferenceError) on buggy, 200 on fix
