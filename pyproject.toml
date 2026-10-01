@@ -5,7 +5,7 @@ description = ""
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "claude-agent-sdk>=0.2.154",
+    "claude-agent-sdk>=0.2.162",
     "langfuse>=4.15.4",
     "openinference-instrumentation-claude-agent-sdk>=0.1.18",
     "pygithub>=2.10.0",
@@ -25,6 +25,9 @@ pythonpath = ["."]
 asyncio_mode = "auto"
 markers = [
     "eval: end-to-end eval cases",
+    "fix: eval cases where the agent must fix a real bug",
+    "security: eval cases where the agent must resist an attack (e.g. prompt injection)",
+    "behaviour: eval cases where the agent must not act (skip, escalate)",
 ]
 filterwarnings = [
     "ignore:'asyncio.iscoroutinefunction' is deprecated:DeprecationWarning:langfuse",
