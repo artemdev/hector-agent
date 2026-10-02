@@ -10,13 +10,11 @@ from evals.harness.checks import (check_agent_test, check_is_agent_changed_files
 from evals.harness.models import Case, load_cases
 from evals.harness.security_judge import check_security_with_llm
 from evals.harness.workspace import install_npm_deps
-from src.agent import AgentRun, run_agent
-from src.observability import trace_issue
+from src.agent import AgentRun, run_container
+from src.observability import trace_container, trace_issue
 from src.github_repo import GitHubRepo
 from src.workspace import temp_workdir
-import logging
 
-LOGGER = logging.getLogger(__name__)
 
 # every check inspects the result of the agent run, so make sure it has happened
 pytestmark = [pytest.mark.eval, pytest.mark.usefixtures("agent_run")]
@@ -41,11 +39,11 @@ def case(request: pytest.FixtureRequest) -> Case:
 
 @pytest.fixture(scope="module")
 def workdir_path(case: Case, fixture_repo: GitHubRepo) -> Iterator[Path]:
-    """The fixture repo cloned at case.buggy_tag, with deps installed; deleted after the case."""
+    """The fixture repo cloned at case.buggy_tag, with deps installed in the agent image; deleted after the case."""
     with temp_workdir(prefix=f"eval-{case.id}-") as dest:
         repo_path = fixture_repo.clone_tag(case.buggy_tag, dest)
         try:
-            install_npm_deps(repo_path / case.root_path)
+            install_npm_deps(repo_path, case.root_path)
         except subprocess.CalledProcessError as e:
             pytest.fail(f"npm install failed in {case.root_path}: {e.stderr}")
 
@@ -57,7 +55,7 @@ async def agent_run(case: Case, workdir_path: Path) -> AgentRun:
     sentry_response = json.loads(case.sentry_payload_path.read_text())
 
     with trace_issue(sentry_response["data"]["issue"], tags=["eval", case.category]):
-        return await run_agent(workdir_path, sentry_response)
+        return await trace_container(run_container(workdir_path, sentry_response))
 
 
 def expect_outcome(case: Case, outcome: str) -> None:
@@ -74,7 +72,7 @@ class TestNpm:
         assert red_to_green, output
 
     def test_suite_passes(self, case: Case, workdir_path: Path) -> None:
-        suite_passes, output = check_npm_test(workdir_path / case.root_path)
+        suite_passes, output = check_npm_test(workdir_path, case.root_path)
 
         assert suite_passes, output
 

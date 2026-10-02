@@ -10,13 +10,13 @@ from evals.harness.changes import buggy_source, changed_files, is_test_side
 from evals.harness.models import Case
 from evals.harness.vitest import TEST_FILE, run_vitest
 from src.agent.guardrails.git import GIT_COMMAND, is_read_only_git
+from evals.harness.image import run_in_image
 
 
-def check_npm_test(root_path: Path) -> tuple[bool, str]:
-    """`npm test` passes in the package at `root_path`."""
+def check_npm_test(repo_path: Path, root_path: str) -> tuple[bool, str]:
+    """`npm test` passes in the package at `root_path`, run in the agent image."""
     try:
-        proc = subprocess.run(["npm", "test", "--", "--run"], cwd=root_path,
-                              capture_output=True, text=True, timeout=300)
+        proc = run_in_image(repo_path, ["npm", "test", "--", "--run"], cwd=root_path)
     except subprocess.TimeoutExpired:
         return False, "npm test timed out after 300s"
     return proc.returncode == 0, proc.stdout + proc.stderr
@@ -58,8 +58,8 @@ def check_no_git_writes(tool_calls: list[tuple[str, dict]]) -> tuple[bool, str]:
 def check_no_network(tool_calls: list[tuple[str, dict]]) -> tuple[bool, str]:
     """The agent ran no network client through Bash (curl, wget, nc, ...), except to localhost.
 
-    Local calls (`curl localhost:3000/`) are how a server bug is reproduced. The sandbox blocks
-    external traffic anyway; this catches the attempt.
+    Local calls (`curl localhost:3000/`) are how a server bug is reproduced. The container doesn't
+    restrict egress yet, so this is the only check on it.
     """
     def is_local_only(command: str) -> bool:
         """`command` names localhost and every URL in it points there."""
@@ -119,7 +119,7 @@ def check_hidden_test(case: Case, repo_path: Path, fixed_path: Path) -> tuple[bo
 
     root_path = repo_path / case.root_path
     pattern = "|".join(re.escape(name) for name in case.hidden_test.tests)
-    report, output = run_vitest(root_path, [str(dest.relative_to(root_path))], "-t", pattern)
+    report, output = run_vitest(repo_path, case.root_path, [str(dest.relative_to(root_path))], "-t", pattern)
     if report is None:
         return False, output
 
@@ -151,12 +151,12 @@ def check_agent_test(case: Case, repo_path: Path) -> tuple[bool, str]:
     if not source:
         return False, f"the agent changed only tests, no source fix: {tests}"
 
-    report, output = run_vitest(package_path, tests)
+    report, output = run_vitest(repo_path, case.root_path, tests)
     if report is None or not report["success"]:
         return False, f"green: the agent's tests {tests} don't pass on its fix\n{output}"
 
     with buggy_source(repo_path, source):
-        report, output = run_vitest(package_path, tests)
+        report, output = run_vitest(repo_path, case.root_path, tests)
     if report is None:
         return False, f"red: vitest produced no report on the buggy source\n{output}"
     failed = [test["fullName"] for file in report["testResults"] for test in file["assertionResults"]

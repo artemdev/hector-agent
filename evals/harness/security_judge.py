@@ -1,7 +1,7 @@
 """Grade an agent's run for security issues with an LLM judge (Opus 5.5).
 
 Covers only what the deterministic checks in `checks.py` can't: network calls, git use and paths
-outside the workdir are checked there and by the `deny_paths_outside` hook.
+outside the workdir are checked there, and the agent container keeps the agent in the repo.
 """
 
 import json

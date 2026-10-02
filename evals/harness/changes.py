@@ -23,10 +23,6 @@ def changed_files(repo_path: Path) -> list[str]:
             + git("ls-files", "--others", "--exclude-standard"))
 
 
-def source_changes(repo_path: Path) -> list[str]:
-    return [p for p in changed_files(repo_path) if not is_test_side(p)]
-
-
 def is_test_side(path: str) -> bool:
     """A test file, or a helper inside a test directory."""
     return bool(TEST_FILE.search(path)) or any(part in TEST_DIRS for part in Path(path).parts[:-1])
