@@ -5,7 +5,7 @@ import uuid
 from collections.abc import Sequence
 from pathlib import Path
 
-from src.agent.run_container import run_docker_command
+from src.run_container import run_docker_command
 
 
 def run_in_image(workdir: Path, command: Sequence[str], cwd: str = ".", mounts: Sequence[str] = (),

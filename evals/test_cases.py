@@ -10,7 +10,8 @@ from evals.harness.checks import (check_agent_test, check_is_agent_changed_files
 from evals.harness.models import Case, load_cases
 from evals.harness.security_judge import check_security_with_llm
 from evals.harness.workspace import install_npm_deps
-from src.agent import AgentRun, run_container
+from src.agent import AgentRun
+from src.run_container import run_container
 from src.observability import trace_container, trace_issue
 from src.github_repo import GitHubRepo
 from src.workspace import temp_workdir

@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from claude_agent_sdk import ResultMessage
 
-from src.agent.run_container import IMAGE, run_docker_command, read_run, run_container
+from src.run_container import IMAGE, run_docker_command, read_run, run_container
 from src.agent.run_agent import AgentFailed
 
 RESULT = ResultMessage(subtype="success", duration_ms=1, duration_api_ms=1, is_error=False, num_turns=1,
