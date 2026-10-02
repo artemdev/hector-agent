@@ -1,0 +1,7 @@
+# Allow-list: the build sees only the agent package and the lock file, never .env, .tmp, evals or repo/.
+*
+!pyproject.toml
+!uv.lock
+!src/__init__.py
+!src/agent/
+**/__pycache__
