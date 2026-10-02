@@ -9,7 +9,6 @@ dependencies = [
     "langfuse>=4.15.4",
     "openinference-instrumentation-claude-agent-sdk>=0.1.18",
     "pygithub>=2.10.0",
-    "python-dotenv>=1.2.3",
     "pyyaml>=6.0.3",
     "rich>=15.0.0",
 ]
@@ -22,6 +21,7 @@ dev = [
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+testpaths = ["tests"]  # evals run real agents and cost money: only `make evals` runs them
 asyncio_mode = "auto"
 markers = [
     "eval: end-to-end eval cases",
