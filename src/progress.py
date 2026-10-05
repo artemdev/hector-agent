@@ -1,8 +1,9 @@
 import logging
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager, nullcontext
 from contextvars import ContextVar
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Literal
 import time
 
@@ -33,6 +34,7 @@ ISSUE_ICONS = {
 class _Step:
     label: str
     started: float = field(default_factory=time.monotonic)
+    started_at: datetime = field(default_factory=datetime.now)  # wall clock, for display
     duration: float | None = None  # None while running
     failed: bool = False  # set when the block raised
     spinner: Spinner = field(default_factory=lambda: Spinner("dots"))
@@ -48,6 +50,7 @@ class IssueProgress:
     status: IssueStatus = "pending"
     steps: list[_Step] = field(default_factory=list)
     live: bool = field(default_factory=lambda: console.is_terminal)  # else log lines (server logs)
+    on_change: Callable[["IssueProgress"], None] | None = None  # called when a step starts or ends
 
     def __rich__(self) -> Group:
         steps = Table.grid(padding=(0, 1))
@@ -71,14 +74,17 @@ def _step_icon(s: _Step) -> str:
 _current_issue: ContextVar[IssueProgress] = ContextVar("current_issue")
 
 @contextmanager
-def track_issue(key: str, title: str) -> Generator[IssueProgress, None, None]:
-    """Show the issue as pending while the block runs, with any `step`s inside nested under it.
+def track_issue(
+    key: str, title: str, *, on_change: Callable[[IssueProgress], None] | None = None
+) -> Generator[IssueProgress, None, None]:
+    """Show the issue as pending while the block runs, with any `step`s inside nested under it; `on_change`
+    is called with the progress whenever a step starts or ends.
 
     Set `.status` on the yielded progress to "resolved"/"unchanged"/"failed" before the block ends; an
     exception marks it failed. On a terminal this is a live view with spinners; otherwise
     (server logs) each status change is one log line prefixed with `key`.
     """
-    progress = IssueProgress(key, title)
+    progress = IssueProgress(key, title, on_change=on_change)
     token = _current_issue.set(progress)
 
     if not progress.live:
@@ -122,12 +128,18 @@ def step(label: str, *, tool: str | None = None) -> Generator[_Step, None, None]
 
 @contextmanager
 def _display_step(label: str) -> Generator[_Step, None, None]:
-    issue = _current_issue.get()  # LookupError outside `track_issue`
+    issue = _current_issue.get()
+
     current = _Step(label)
+
     issue.steps.append(current)
+
+    if issue.on_change:
+        issue.on_change(issue)
 
     if not issue.live:
         logger.info("%s: %s...", issue.key, label)
+
     try:
         yield current
     except BaseException:
@@ -135,7 +147,9 @@ def _display_step(label: str) -> Generator[_Step, None, None]:
         raise
     finally:
         current.duration = time.monotonic() - current.started
+
         if not issue.live:
             icon = "✗" if current.failed else "✓"
             logger.info("%s: %s %s (%.1fs)", issue.key, icon, label, current.duration)
-
+        if issue.on_change:
+            issue.on_change(issue)

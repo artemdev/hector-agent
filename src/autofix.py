@@ -2,17 +2,18 @@
 
 import logging
 import os
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
 from src.run_container import run_container
 from src.github_repo import GitHubRepo
 from src.observability import langfuse, trace_container, trace_issue
-from src.progress import step, track_issue
+from src.progress import IssueProgress, step, track_issue
+from src.telegram import TelegramStatus
 from src.workspace import temp_workdir
 
 logger = logging.getLogger(__name__)
-
 
 async def fix_issue(event: dict, ref: str | None) -> str | None:
     """Try to fix the issue in the Sentry `event` on the repo at `ref` (the default branch if None): returns
@@ -25,10 +26,28 @@ async def fix_issue(event: dict, ref: str | None) -> str | None:
     if not git_token:
         raise RuntimeError("GIT_AUTH_TOKEN is not set")
 
+    status = TelegramStatus(event["data"]["issue"])
+
+    try:
+        pr_url, summary = await _fix_issue(event, ref, git_token, on_change=status.progress)
+    except Exception as e:
+        status.failed(e)
+        raise
+    if pr_url:
+        status.fixed(pr_url)
+    else:
+        status.not_fixed(summary)
+    return pr_url
+
+
+async def _fix_issue(
+    event: dict, ref: str | None, git_token: str, on_change: Callable[[IssueProgress], None]
+) -> tuple[str | None, str | None]:
+    """`fix_issue` behind its Telegram status: returns the PR URL (or None) and the agent's summary."""
     issue = event["data"]["issue"]
 
     with (
-        track_issue(issue["shortId"], issue["title"]) as tracked,
+        track_issue(issue["shortId"], issue["title"], on_change=on_change) as tracked,
         trace_issue(issue, tags=["deliver"]) as trace,
         temp_workdir() as workdir,
     ):
@@ -45,18 +64,19 @@ async def fix_issue(event: dict, ref: str | None) -> str | None:
             repo.clone(workdir, ref=ref)
 
             clone.output = {"path": str(workdir), "ref": ref}
-        pr_url = await ship_fix(repo, workdir, event)
+
+        pr_url, summary = await _ship_fix(repo, workdir, event)
 
         tracked.status = "resolved" if pr_url else "unchanged"
 
         trace.update(output={"pr_url": pr_url})
 
-        return pr_url
+        return pr_url, summary
 
 
-async def ship_fix(repo: GitHubRepo, workdir: Path, event: dict) -> str | None:
-    """Run the agent on the clone at `workdir`, then commit, push and open a PR: returns its URL, or None
-    if the agent changed nothing."""
+async def _ship_fix(repo: GitHubRepo, workdir: Path, event: dict) -> tuple[str | None, str | None]:
+    """Run the agent on the clone at `workdir`, then commit, push and open a PR: returns its URL (None if
+    the agent changed nothing) and the agent's summary."""
     issue = event["data"]["issue"]
 
     with step("agent working"):
@@ -72,7 +92,7 @@ async def ship_fix(repo: GitHubRepo, workdir: Path, event: dict) -> str | None:
         logger.info("agent made no changes; nothing to ship")
         langfuse.create_event(name="no changes")
 
-        return None
+        return None, outcome.result.result
     with step(f"pushing {branch_name}", tool="push") as push:
         repo.push(workdir, branch_name)
 
@@ -82,5 +102,4 @@ async def ship_fix(repo: GitHubRepo, workdir: Path, event: dict) -> str | None:
             branch_name, title=title, body=outcome.result.result or ""
         )
         pr.output = {"pr_url": pr_url}
-
-    return pr_url
+    return pr_url, outcome.result.result
