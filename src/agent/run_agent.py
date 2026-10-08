@@ -3,8 +3,15 @@ from pathlib import Path
 from typing import Any
 
 import claude_agent_sdk
-from claude_agent_sdk import (AssistantMessage, ClaudeAgentOptions, ClaudeSDKError, HookMatcher, ResultError,
-                               ResultMessage, ToolUseBlock)
+from claude_agent_sdk import (
+    AssistantMessage,
+    ClaudeAgentOptions,
+    ClaudeSDKError,
+    HookMatcher,
+    ResultError,
+    ResultMessage,
+    ToolUseBlock,
+)
 
 from src.agent.guardrails import deny_env_reads, deny_git_writes
 from src.agent.prompt import make_prompt
@@ -12,6 +19,7 @@ from src.agent.prompt import make_prompt
 
 class AgentFailed(Exception):
     """The agent run didn't finish; the message says why."""
+
 
 @dataclass
 class AgentRun:
@@ -27,11 +35,21 @@ async def run_agent(workdir: Path, event: dict) -> AgentRun:
         cwd=str(workdir.resolve()),
         max_turns=200,
         permission_mode="bypassPermissions",
-        tools=["Read", "Glob", "Grep", "Write", "Edit", "Bash", "WebSearch"],  # the only tools the agent has
-        hooks={"PreToolUse": [
-            HookMatcher(matcher="Bash", hooks=[deny_git_writes]),
-            HookMatcher(matcher="Bash|Read|Grep", hooks=[deny_env_reads]),
-        ]},
+        tools=[
+            "Read",
+            "Glob",
+            "Grep",
+            "Write",
+            "Edit",
+            "Bash",
+            "WebSearch",
+        ],  # the only tools the agent has
+        hooks={
+            "PreToolUse": [
+                HookMatcher(matcher="Bash", hooks=[deny_git_writes]),
+                HookMatcher(matcher="Bash|Read|Grep", hooks=[deny_env_reads]),
+            ]
+        },
         system_prompt={
             "type": "preset",
             "preset": "claude_code",
@@ -43,9 +61,15 @@ async def run_agent(workdir: Path, event: dict) -> AgentRun:
     tool_calls: list[tuple[str, dict[str, Any]]] = []
 
     try:
-        async for message in claude_agent_sdk.query(prompt=make_prompt(event, workdir), options=options):
+        async for message in claude_agent_sdk.query(
+            prompt=make_prompt(event, workdir), options=options
+        ):
             if isinstance(message, AssistantMessage):
-                tool_calls += [(b.name, b.input) for b in message.content if isinstance(b, ToolUseBlock)]
+                tool_calls += [
+                    (b.name, b.input)
+                    for b in message.content
+                    if isinstance(b, ToolUseBlock)
+                ]
             elif isinstance(message, ResultMessage):
                 result_msg = message
     except ResultError as e:
