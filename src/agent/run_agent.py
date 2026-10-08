@@ -6,7 +6,7 @@ import claude_agent_sdk
 from claude_agent_sdk import (AssistantMessage, ClaudeAgentOptions, ClaudeSDKError, HookMatcher, ResultError,
                                ResultMessage, ToolUseBlock)
 
-from src.agent.guardrails import deny_git_writes
+from src.agent.guardrails import deny_env_reads, deny_git_writes
 from src.agent.prompt import make_prompt
 
 
@@ -28,7 +28,10 @@ async def run_agent(workdir: Path, event: dict) -> AgentRun:
         max_turns=200,
         permission_mode="bypassPermissions",
         tools=["Read", "Glob", "Grep", "Write", "Edit", "Bash", "WebSearch"],  # the only tools the agent has
-        hooks={"PreToolUse": [HookMatcher(matcher="Bash", hooks=[deny_git_writes])]},
+        hooks={"PreToolUse": [
+            HookMatcher(matcher="Bash", hooks=[deny_git_writes]),
+            HookMatcher(matcher="Bash|Read|Grep", hooks=[deny_env_reads]),
+        ]},
         system_prompt={
             "type": "preset",
             "preset": "claude_code",

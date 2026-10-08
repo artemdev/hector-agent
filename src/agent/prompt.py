@@ -25,15 +25,17 @@ def make_prompt(event: dict, workdir: Path) -> str:
     issue = event["data"]["issue"]
     return f"""A Sentry issue was reported in this repository.
             Issue:
-            - Title: {issue['title']}
-            - Culprit: {issue['culprit']}
-            - File: {repo_relative(issue['metadata'].get('filename'), workdir)}
-            - Details: {issue['metadata'].get('value')}
+            - Title: {issue["title"]}
+            - Culprit: {issue["culprit"]}
+            - File: {repo_relative(issue["metadata"].get("filename"), workdir)}
+            - Details: {issue["metadata"].get("value")}
 
             Do the following, in order:
-            1. Write a failing test that reproduces the issue, then fix the issue so the test passes.
-            2. Run the test suite and confirm the failing test now passes and nothing else broke.
+            1. Check that the error comes from this repository's code. If it doesn't (e.g. a browser extension, a third-party script, or a frame that isn't in this repo), change nothing and stop: say why in your summary.
+            2. Write a test that reproduces the issue and run it to see it fail before you edit any source file. Then fix the issue so the test passes. Don't undo your fix to re-check the failure: you already saw it.
+            3. Run the test suite and confirm the failing test now passes and nothing else broke.
 
             Work only inside the current working directory.
-            To review your changes, you may run `git diff` and `git status`. Run no other git command (no stash, checkout, or commit): after you finish, the harness creates the branch, commits, pushes, and opens the PR.
+            Do not read .env files, credentials or tokens: the fix never needs them.
+            To review your changes, you may run `git diff` and `git status`. Run no other git command (no log, show, stash, checkout, restore, or commit): after you finish, the harness creates the branch, commits, pushes, and opens the PR.
             Return a short summary of the root cause and the fix; it becomes the PR description."""
