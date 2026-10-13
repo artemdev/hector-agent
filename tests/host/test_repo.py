@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.github_repo import GitError, GitHubRepo
+from src.host.github_repo import GitError, GitHubRepo
 
 REPO = "user/repo"
 CLONE_URL = f"https://github.com/{REPO}.git"
@@ -16,7 +16,7 @@ AUTH_HEADER = "Authorization: Basic " + base64.b64encode(f"x-access-token:{TOKEN
 @pytest.fixture
 def github():
     """Fake PyGithub: no network, the repo has a clone URL and a `main` default branch."""
-    with patch("src.github_repo.Github") as github_cls:
+    with patch("src.host.github_repo.Github") as github_cls:
         gh_repo = github_cls.return_value.get_repo.return_value
         gh_repo.clone_url = CLONE_URL
         gh_repo.default_branch = "main"
@@ -37,7 +37,7 @@ def repo(github):  # `github` creates mock for GitHubRepo
 @pytest.fixture
 def git_run():
     """Fake `subprocess.run`, to check which git commands would run."""
-    with patch("src.github_repo.subprocess.run") as run:
+    with patch("src.host.github_repo.subprocess.run") as run:
         yield run
 
 

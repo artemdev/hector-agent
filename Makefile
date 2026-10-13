@@ -7,7 +7,7 @@ image:
 	docker build -q -f Dockerfile.agent -t watchdog-agent:dev .
 
 run: image
-	uv run --env-file .env python -m src evals/cases/$(CASE)/sentry.json --ref $(CASE)
+	uv run --env-file .env python -m src.host evals/cases/$(CASE)/sentry.json --ref $(CASE)
 
 test:
 	uv run pytest -v tests

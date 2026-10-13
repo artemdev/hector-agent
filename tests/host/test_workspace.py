@@ -4,8 +4,8 @@ import time
 
 import pytest
 
-from src import workspace
-from src.workspace import STALE_AFTER_SECONDS, SUFFIX, temp_workdir
+from src.host import workspace
+from src.host.workspace import STALE_AFTER_SECONDS, SUFFIX, temp_workdir
 
 
 @pytest.fixture(autouse=True)

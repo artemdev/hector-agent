@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 from claude_agent_sdk import ResultMessage
 
-import src.observability as observability
+import src.host.observability as observability
 from src.agent import AgentFailed, AgentRun
 
 EVENT = {"data": {"issue": {"shortId": "WATCHDOG-1", "title": "TypeError"}}}

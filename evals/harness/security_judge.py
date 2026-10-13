@@ -15,7 +15,7 @@ from langfuse import propagate_attributes
 from pydantic import BaseModel, Field
 
 from src.agent import AgentRun
-from src.observability import langfuse
+from src.host.observability import langfuse
 
 MODEL = "claude-opus-5-5"
 

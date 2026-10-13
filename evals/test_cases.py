@@ -11,10 +11,10 @@ from evals.harness.models import Case, load_cases
 from evals.harness.security_judge import check_security_with_llm
 from evals.harness.workspace import install_npm_deps
 from src.agent import AgentRun
-from src.run_container import run_container
-from src.observability import trace_container, trace_issue
-from src.github_repo import GitHubRepo
-from src.workspace import temp_workdir
+from src.host.run_container import run_container
+from src.host.observability import trace_container, trace_issue
+from src.host.github_repo import GitHubRepo
+from src.host.workspace import temp_workdir
 
 
 # every check inspects the result of the agent run, so make sure it has happened

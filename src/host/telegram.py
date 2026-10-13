@@ -11,7 +11,7 @@ import urllib.request
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.progress import IssueProgress
+    from src.host.progress import IssueProgress
 
 logger = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@ import subprocess
 import pytest
 
 from evals.harness.image import run_in_image
-from src.run_container import IMAGE
+from src.host.run_container import IMAGE
 
 
 class TestRunInImage:

@@ -15,7 +15,7 @@ from rich.padding import Padding
 from rich.spinner import Spinner
 from rich.table import Table
 
-from src.observability import langfuse
+from src.host.observability import langfuse
 
 console = get_console()
 logger = logging.getLogger(__name__)

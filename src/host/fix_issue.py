@@ -6,12 +6,12 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
-from src.run_container import run_container
-from src.github_repo import GitHubRepo
-from src.observability import langfuse, trace_container, trace_issue
-from src.progress import IssueProgress, step, track_issue
-from src.telegram import TelegramStatus
-from src.workspace import temp_workdir
+from src.host.run_container import run_container
+from src.host.github_repo import GitHubRepo
+from src.host.observability import langfuse, trace_container, trace_issue
+from src.host.progress import IssueProgress, step, track_issue
+from src.host.telegram import TelegramStatus
+from src.host.workspace import temp_workdir
 
 logger = logging.getLogger(__name__)
 

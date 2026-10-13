@@ -8,7 +8,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-WORK_ROOT = Path(__file__).resolve().parents[2] / ".tmp"
+WORK_ROOT = Path(__file__).resolve().parents[3] / ".tmp"
 SUFFIX = ".workdir"
 STALE_AFTER_SECONDS = 6 * 60 * 60
 
