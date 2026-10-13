@@ -1,6 +1,18 @@
-repo/
+# secrets
 .env
+
+# python
 .venv/
-__pycache__
-launch.json
-settings.json
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+
+# fixture repo cloned for evals
+repo/
+
+# editor / OS
+.vscode/
+.DS_Store
+
+# personal notes
+*.todo.txt
