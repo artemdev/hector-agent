@@ -4,7 +4,7 @@ Sentry signs every webhook: `Sentry-Hook-Signature` is the HMAC-SHA256 hex diges
 with the integration's client secret (SENTRY_CLIENT_SECRET). Serve it with `make serve`.
 
 Where the fix runs depends on ENV:
-- prod (default): the event is sent as a `repository_dispatch` to WATCHDOG_REPO, whose `fix-issue` workflow
+- prod (default): the event is sent as a `repository_dispatch` to REPO_NAME, whose `fix-issue` workflow
   runs `fix_issue` on a GitHub runner. Needs DISPATCH_TOKEN, a token allowed to dispatch to that repo.
 - dev: `fix_issue` runs in this process, after the response, like `make run`.
 """
@@ -49,9 +49,9 @@ def is_signed(body: bytes, signature: str | None) -> bool:
 
 
 def dispatch(event: dict) -> None:
-    """Start the `fix-issue` workflow in WATCHDOG_REPO on the Sentry `event`."""
+    """Start the `fix-issue` workflow in REPO_NAME on the Sentry `event`."""
     request = urllib.request.Request(
-        f"https://api.github.com/repos/{os.environ['WATCHDOG_REPO']}/dispatches",
+        f"https://api.github.com/repos/{os.environ['REPO_NAME']}/dispatches",
         data=json.dumps({"event_type": DISPATCH_EVENT_TYPE, "client_payload": {"event": event}}).encode(),
         headers={
             "Authorization": f"Bearer {os.environ['DISPATCH_TOKEN']}",
@@ -104,7 +104,7 @@ if __name__ == "__main__":
         raise SystemExit("SENTRY_CLIENT_SECRET is not set: every webhook would be rejected")
 
     if not is_dev():
-        missing = [name for name in ("WATCHDOG_REPO", "DISPATCH_TOKEN") if not os.environ.get(name)]
+        missing = [name for name in ("REPO_NAME", "DISPATCH_TOKEN") if not os.environ.get(name)]
         if missing:
             raise SystemExit(f"{', '.join(missing)} not set: no fix could be started (or set ENV=dev)")
 
