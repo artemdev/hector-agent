@@ -21,7 +21,7 @@ async def fix_issue(event: dict, ref: str | None) -> str | None:
 
     Raises `AgentFailed` when the agent itself fails."""
 
-    git_token = os.environ.pop("GIT_AUTH_TOKEN", None)
+    git_token = os.environ.get("GIT_AUTH_TOKEN")
 
     if not git_token:
         raise RuntimeError("GIT_AUTH_TOKEN is not set")

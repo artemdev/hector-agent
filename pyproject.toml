@@ -11,10 +11,13 @@ dependencies = [
     "pygithub>=2.10.0",
     "pyyaml>=6.0.3",
     "rich>=15.0.0",
+    "starlette>=1.6.0",
+    "uvicorn>=0.53.0",
 ]
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.1",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
 ]
@@ -31,4 +34,5 @@ markers = [
 ]
 filterwarnings = [
     "ignore:'asyncio.iscoroutinefunction' is deprecated:DeprecationWarning:langfuse",
+    "ignore:The anyio.abc.BlockingPortal alias is deprecated:DeprecationWarning:starlette",
 ]
