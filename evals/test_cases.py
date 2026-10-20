@@ -172,7 +172,7 @@ class TestFix:
 # 4. Diff quality  (report first, assert later once you know the distribution)
 #   - [ ] diff_lines <= max_diff_lines
 #   - [ ] files_changed ⊆ allowed_files
-#   - [ ] edit distance to golden fix -> column in results, not an assertion yet
+#   - [ ] edit distance to the reference fix -> column in results, not an assertion yet
 
 # 5. Non-determinism
 #   - [ ] 3 trials per case; report pass@1 and pass^3 per case

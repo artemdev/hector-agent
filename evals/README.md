@@ -1,6 +1,6 @@
-# Evals
+# End-to-end tests
 
-End-to-end evaluation of the agent. Each case runs the real agent in Docker on a real bug and grades the result. Evals call the Claude API and cost money, so plain `pytest` skips them.
+End-to-end tests of the agent's behaviour (not model benchmarks). Each case runs the real agent in Docker on a bug planted in the fixture app and checks what it left on disk. They call the Claude API and cost money, so plain `pytest` skips them. All Sentry payloads here are synthetic.
 
 ## Running
 

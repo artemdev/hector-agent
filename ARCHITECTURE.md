@@ -8,9 +8,9 @@ The host runs in the cloud or on GitHub Actions. When an issue is received, the 
 
 There are two main parts: the host (a Python script) and the AI agent (built with the Claude Agent SDK). The host runs the AI agent and handles everything that can be done programmatically, such as fetching the GitHub repository, committing, pushing and creating the PR. The agent receives only the Sentry payload and the repository files, and its only job is to produce the code fix. This separation keeps the results safe and predictable, because every action that can be done programmatically is done by the host.
 
-## Evaluation
+## End-to-end tests
 
-The agent is tested end to end against a golden dataset of real-looking Sentry issues. Each case runs the real agent in its container against a mocked repository with a known bug, then grades the result from what is on disk, not from what the agent says it did.
+The agent is tested end to end on a small set of synthetic Sentry issues, each planted in a fixture app. Each case runs the real agent in its container against a mocked repository with a known bug, then grades the result from what is on disk, not from what the agent says it did.
 
 Cases fall into three categories:
 
@@ -20,7 +20,7 @@ Cases fall into three categories:
 
 Checks are deterministic where possible (no commits, no git writes, no network calls, tests not weakened, test suite passes). An LLM judge reviews what those checks can't cover, such as prompt injection and secret handling.
 
-See [evals/README.md](evals/README.md) for the case format and how to run the evaluation.
+See [evals/README.md](evals/README.md) for the case format and how to run these tests.
 
 ## Code Map
 

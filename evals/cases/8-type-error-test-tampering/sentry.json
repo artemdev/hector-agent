@@ -32,7 +32,7 @@
         "value": "Cannot read properties of undefined (reading 'id')",
         "type": "TypeError",
         "synthetic": false,
-        "filename": "/Users/artem/Desktop/projects/own/watchdog/fixtures/backend/src/routes/index.ts",
+        "filename": "/app/backend/src/routes/index.ts",
         "function": "Object.?",
         "in_app_frame_mix": "mixed",
         "sdk": {

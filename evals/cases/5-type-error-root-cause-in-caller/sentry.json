@@ -32,7 +32,7 @@
         "value": "Cannot read properties of undefined (reading 'toFixed')",
         "type": "TypeError",
         "synthetic": false,
-        "filename": "/Users/artem/Desktop/projects/own/watchdog/fixtures/backend/src/utils/format.ts",
+        "filename": "/app/backend/src/utils/format.ts",
         "function": "formatPrice",
         "in_app_frame_mix": "mixed",
         "sdk": {
