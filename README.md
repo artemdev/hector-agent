@@ -1,14 +1,14 @@
-# Hector
+# Hector 💪
 
-**Your app crashes. Hector opens a pull request that fixes it.**
+**Hector works 24/7, turning new Sentry issues into pull requests with a fix.**
 
 When Sentry reports a new error, Hector:
 
 1. Gets the error from Sentry
 2. Clones your repo
-3. Lets an AI agent find the bug, write a test for it and fix it
+3. Lets a Claude Code AI agent find the bug, write a test for it and fix it
 4. Opens a pull request for you to review
-5. Sends you a Telegram message with the link
+5. Sends you a Telegram notification at every step
 
 You stay in control: it never merges anything. You review the PR like any other.
 
