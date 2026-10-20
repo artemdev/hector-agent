@@ -1,55 +1,58 @@
 # Watchdog Agent
 
-An AI agent that turns production errors from Sentry into pull requests. When Sentry reports a new issue, Watchdog clones the affected repository, lets a Claude agent reproduce the bug, write a regression test and fix it inside a locked-down Docker container, then pushes a branch, opens a PR and reports the status to Telegram.
+**Your app crashes. Watchdog opens a pull request that fixes it.**
 
-It is for solo developers and small teams who want a first-draft fix waiting for review instead of a bare error alert. I use it on my own TypeScript app.
+When Sentry reports a new error, Watchdog:
 
-## How it works
+1. Gets the error from Sentry
+2. Clones your repo
+3. Lets an AI agent find the bug, write a test for it and fix it
+4. Opens a pull request for you to review
+5. Sends you a Telegram message with the link
 
+You stay in control: it never merges anything. You review the PR like any other.
+
+## Is it safe?
+
+- The AI only edits files. It can't push, commit or read your secrets.
+- It runs inside a locked Docker container and stops after 30 minutes.
+- Pushing and opening the PR is done by plain code, not by the AI.
+
+## Try it
+
+You need Python 3.12+, [uv](https://docs.astral.sh/uv/) and Docker.
+
+```sh
+cp .env.example .env    # add your GitHub token and Claude key
+uv sync
+make run                # fix a sample bug end to end
 ```
-Sentry ──webhook──▶ src/host/webhook.py ──repository_dispatch──▶ GitHub Actions (fix-issue.yml)
-                                                                    │
-                                                    src/host/fix_issue.py
-                                     clone ─▶ agent in Docker ─▶ commit ─▶ push ─▶ PR ─▶ Telegram
-```
 
-- **Host** (plain Python) does everything that can be done deterministically: verifying the webhook signature, cloning, committing, pushing, opening the PR.
-- **Agent** ([Claude Agent SDK](https://github.com/anthropics/claude-agent-sdk-python)) only edits files. It runs in a container with no git credentials, guardrails that block git writes and `.env` reads, and a 30-minute timeout.
+Other commands:
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the full code map.
+| Command      | What it does                         |
+|--------------|--------------------------------------|
+| `make test`  | Run unit tests (free, no AI calls)   |
+| `make evals` | Run the agent on all sample bugs     |
+| `make serve` | Start the webhook that Sentry calls  |
+
+The sample bugs live in [watchdog-fixtures](https://github.com/artemdev/watchdog-fixtures).
+
+## Use it on your app
+
+1. Run the webhook somewhere (`make serve` with `ENV=prod`).
+2. Add your keys as secrets in this repo's GitHub settings (see `.env.example`).
+3. In Sentry, point a webhook at `https://<your-server>/sentry`.
 
 ## Built with
 
-Python 3.12, [uv](https://docs.astral.sh/uv/), Claude Agent SDK, Starlette + Uvicorn (webhook), PyGithub, Docker, GitHub Actions, Langfuse (tracing), pytest.
+Python, Claude Agent SDK, Docker, GitHub Actions, Sentry, Langfuse.
 
-## Running locally
+## More
 
-Requirements: Python 3.12+, uv, Docker.
-
-```sh
-cp .env.example .env        # fill in GIT_REPO_NAME, GIT_AUTH_TOKEN and a Claude credential
-uv sync
-make test                   # unit tests, no API calls
-make run CASE=2-type-error-cannot-read-undefined   # fix one sample Sentry issue end to end
-make serve                  # receive Sentry webhooks at POST /sentry (ENV=dev fixes in-process)
-```
-
-`make run` uses the sample issues in [`evals/cases`](evals/cases) against the fixture app in [watchdog-fixtures](https://github.com/artemdev/watchdog-fixtures).
-
-## Deploying
-
-1. Host the webhook (`python -m src.host.webhook`) with `ENV=prod`, `SENTRY_CLIENT_SECRET`, `WATCHDOG_REPO` and `DISPATCH_TOKEN`.
-2. In this repo's GitHub settings, add the secrets `GIT_AUTH_TOKEN`, `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and the variables `GIT_REPO_NAME`, `LANGFUSE_BASE_URL`.
-3. In Sentry, create an internal integration with a webhook pointing at `https://<your-host>/sentry` and subscribe it to issue events.
-
-## Testing
-
-- `make test`: unit tests for the host, agent guardrails and harness.
-- `make evals`: end-to-end tests of the agent's behaviour. Each case plants a bug in the fixture app, runs the real agent and checks the result on disk: the bug is fixed (by a hidden test), prompt injections in the payload are resisted, and noise is ignored. All payloads are synthetic. See [evals/README.md](evals/README.md).
-
-## Roadmap
-
-See [ROADMAP.md](ROADMAP.md).
+- [How it works inside](ARCHITECTURE.md)
+- [Sample bugs and tests](evals/README.md)
+- [What's next](ROADMAP.md)
 
 ## License
 
