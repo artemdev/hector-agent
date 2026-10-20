@@ -17,7 +17,7 @@ from claude_agent_sdk import ResultMessage
 
 from src.agent.run_agent import AgentFailed, AgentRun
 
-IMAGE = "watchdog-agent:dev"
+IMAGE = "hector:dev"
 TIMEOUT_SECONDS = 30 * 60
 AGENT_UID = "uid=1000,gid=1000"  # the image's `node` user
 
@@ -53,7 +53,7 @@ def read_run(output: str) -> AgentRun:
 async def run_container(workdir: Path, event: dict) -> AgentRun:
     """Run the agent in a fresh container on the repo checked out at `workdir`."""
 
-    name = f"watchdog-agent-{uuid.uuid4().hex[:12]}"
+    name = f"hector-{uuid.uuid4().hex[:12]}"
 
     with tempfile.TemporaryDirectory() as tmp:
         event_file = Path(tmp) / "event.json"

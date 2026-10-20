@@ -16,7 +16,7 @@ def run_in_image(workdir: Path, command: Sequence[str], cwd: str = ".", mounts: 
     to `workdir`; `mounts` are extra `-v` specs. Raises `subprocess.TimeoutExpired` after `timeout` seconds,
     once the container is killed; an interrupt kills it too.
     """
-    name = f"watchdog-run-{uuid.uuid4().hex[:12]}"
+    name = f"hector-run-{uuid.uuid4().hex[:12]}"
     options = ["-w", f"/work/{cwd}", "--entrypoint", command[0], *[arg for m in mounts for arg in ("-v", m)]]
     try:
         return subprocess.run(run_docker_command(name, workdir.resolve(), options, command[1:]),

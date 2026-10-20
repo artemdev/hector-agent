@@ -1,5 +1,5 @@
 [project]
-name = "watchdog-agent"
+name = "hector"
 version = "0.1.0"
 description = "AI agent that turns Sentry errors into pull requests with a regression test and a fix."
 readme = "README.md"

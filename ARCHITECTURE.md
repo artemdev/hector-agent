@@ -1,4 +1,4 @@
-This document describes the high-level architecture of an AI coding agent that fixes production errors reported by Sentry.
+This document describes the high-level architecture of Hector, an AI coding agent that fixes production errors reported by Sentry.
 
 ## Bird's-eye view
 

@@ -4,7 +4,7 @@
 CASE ?= 2-type-error-cannot-read-undefined
 
 image:
-	docker build -q -f Dockerfile.agent -t watchdog-agent:dev .
+	docker build -q -f Dockerfile.agent -t hector:dev .
 
 run: image
 	uv run --env-file .env python -m src.host evals/cases/$(CASE)/sentry.json --ref $(CASE)

@@ -14,7 +14,7 @@ STALE_AFTER_SECONDS = 6 * 60 * 60
 
 
 @contextmanager
-def temp_workdir(prefix: str = "watchdog-") -> Generator[Path, None, None]:
+def temp_workdir(prefix: str = "hector-") -> Generator[Path, None, None]:
     """Yield a fresh, not-yet-existing `repo` path inside a unique dir under `WORK_ROOT`.
     """
     WORK_ROOT.mkdir(exist_ok=True)

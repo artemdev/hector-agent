@@ -96,7 +96,7 @@ class TestRunContainer:
         assert env_names(docker.command) == ["ANTHROPIC_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN"]  # names only
 
     async def test_reports_dockers_own_error(self, docker, tmp_path):
-        docker.process = FakeProcess(125, "", "Unable to find image 'watchdog-agent:dev'")
+        docker.process = FakeProcess(125, "", "Unable to find image 'hector:dev'")
 
         with pytest.raises(AgentFailed, match="exited with 125: Unable to find image"):
             await run_container(tmp_path, {"id": 1})

@@ -25,14 +25,14 @@ if os.getenv("LANGFUSE_PUBLIC_KEY"):
 
 @contextmanager
 def trace_issue(issue: dict, tags: list[str]) -> Generator[LangfuseChain, None, None]:
-    """Make the block one Langfuse trace: a `watchdog-autofix` chain for resolving `issue`.
+    """Make the block one Langfuse trace: a `hector-autofix` chain for resolving `issue`.
 
     Everything traced inside (clone, agent, commit, PR) nests under it
     """
     try:
         with (
             langfuse.start_as_current_observation(
-                name="watchdog-autofix",
+                name="hector-autofix",
                 as_type="chain",
                 input={"issue": issue["shortId"], "title": issue["title"]},
             ) as chain,

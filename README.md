@@ -1,8 +1,8 @@
-# Watchdog Agent
+# Hector
 
-**Your app crashes. Watchdog opens a pull request that fixes it.**
+**Your app crashes. Hector opens a pull request that fixes it.**
 
-When Sentry reports a new error, Watchdog:
+When Sentry reports a new error, Hector:
 
 1. Gets the error from Sentry
 2. Clones your repo

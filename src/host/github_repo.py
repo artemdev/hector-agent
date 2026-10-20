@@ -87,8 +87,8 @@ class GitHubRepo:
         if self._run_git(*git, "status", "--porcelain").stdout.strip():
             self._run_git(
                 *git,
-                "-c", "user.name=watchdog",
-                "-c", "user.email=watchdog@users.noreply.github.com",
+                "-c", "user.name=hector",
+                "-c", "user.email=hector@users.noreply.github.com",
                 "commit", "-m", message,
             )
         ahead = self._run_git(
