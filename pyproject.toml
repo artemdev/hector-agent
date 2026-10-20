@@ -1,7 +1,7 @@
 [project]
-name = "solution"
+name = "watchdog-agent"
 version = "0.1.0"
-description = ""
+description = "AI agent that turns Sentry errors into pull requests with a regression test and a fix."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
