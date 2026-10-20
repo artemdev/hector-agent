@@ -26,9 +26,13 @@ See [evals/README.md](evals/README.md) for the case format and how to run the ev
 
 ### Host
 
+- `src/host/webhook.py`: the entry point in production. `POST /sentry` checks Sentry's `Sentry-Hook-Signature` (HMAC-SHA256 of the body with `SENTRY_CLIENT_SECRET`, 401 if wrong), acknowledges every event but a newly created issue with 200, and for a new issue starts a fix and answers 202. With `ENV=prod` it starts the fix by sending a `repository_dispatch` to `WATCHDOG_REPO`. It answers 502 if that fails, so Sentry retries. Its only secrets are `SENTRY_CLIENT_SECRET` and `DISPATCH_TOKEN`. With `ENV=dev` it runs `fix_issue` in its own process as a background task. `make serve` runs it (`ENV=dev` by default).
+- `.github/workflows/fix-issue.yml`: runs `fix_issue` for one dispatched event on a fresh GitHub runner, which has Docker for the agent container. The git token, the Claude credentials and the Telegram and Langfuse keys are secrets of this repo. The webhook never holds them. It allows one run per issue at a time.
+- `src/host/fix_issue.py`: one issue end to end: clone, run the agent in its container, commit, push, open the PR, report to Telegram. `make run` and the workflow call it directly on an event file.
+
 ### Agent
 
-Can run in isolated docker container (production) or without it (for environments that does not support it).
+Run in isolated docker container (production)
 
 - **Isolation**: Runs in sandbox and docker container to insure that it won't do harmful actions to the environment.
 - **Least privilage**: have access only to mandatory tools: read/write workdir, deny reading/writing git folder or .env variables

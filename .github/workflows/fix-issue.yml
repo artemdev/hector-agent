@@ -1,0 +1,48 @@
+# Fix one Sentry issue and open a PR: started by the webhook (src/host/webhook.py) with a `repository_dispatch`
+# whose client_payload.event is the Sentry event. Runs what `make run` does, on a fresh runner.
+name: fix-issue
+
+on:
+  repository_dispatch:
+    types: [sentry-issue]
+
+permissions:
+  contents: read  # pushes and PRs go to GIT_REPO_NAME with GIT_AUTH_TOKEN, not to this repo
+
+# one run per issue: a webhook Sentry delivers twice queues behind the first instead of opening a second PR
+concurrency:
+  group: fix-issue-${{ github.event.client_payload.event.data.issue.shortId }}
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    name: fix ${{ github.event.client_payload.event.data.issue.shortId }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45  # the agent container itself stops at 30 (run_container.TIMEOUT_SECONDS)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Build the agent image
+        run: make image
+
+      # through env, not ${{ }} in the script: the payload comes from Sentry and must not become shell code
+      - name: Write the Sentry event
+        env:
+          EVENT: ${{ toJson(github.event.client_payload.event) }}
+        run: printf '%s' "$EVENT" > "$RUNNER_TEMP/event.json"
+
+      - name: Fix the issue
+        env:
+          PYTHONUNBUFFERED: "1"
+          GIT_REPO_NAME: ${{ vars.GIT_REPO_NAME }}
+          GIT_AUTH_TOKEN: ${{ secrets.GIT_AUTH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_BASE_URL: ${{ vars.LANGFUSE_BASE_URL }}
+        run: uv run --frozen python -m src.host "$RUNNER_TEMP/event.json"
