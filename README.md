@@ -2,7 +2,7 @@
 
 **Hector works 24/7, turning new Sentry issues into pull requests with a fix.**
 
-https://github.com/user-attachments/assets/fbed16c5-65ab-4f90-9593-f7f2850d925e
+https://github.com/user-attachments/assets/b2420355-53ae-4e5e-86c0-35a9e6cf9949
 
 When Sentry reports a new error, Hector:
 
