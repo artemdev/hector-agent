@@ -85,7 +85,12 @@ def replace_message(sent: dict[str, int], text: str) -> dict[str, int]:
     message_ids = {}
 
     for chat_id in chat_ids:
-        payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
+        payload = {
+            "chat_id": chat_id,
+            "text": text,
+            "parse_mode": "HTML",
+            "link_preview_options": {"is_disabled": True},
+        }
 
         if chat_id in sent and _call(token, "editMessageText", payload | {"message_id": sent[chat_id]}):
             message_ids[chat_id] = sent[chat_id]
