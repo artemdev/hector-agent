@@ -16,11 +16,12 @@ from src.host.workspace import temp_workdir
 logger = logging.getLogger(__name__)
 
 async def fix_issue(event: dict, ref: str | None) -> str | None:
-    """Try to fix the issue in the Sentry `event` on the repo at `ref` (the default branch if None): returns
-    the PR URL, or None if the agent had nothing to change.
+    """Try to fix the issue in the Sentry `event` on the repo at `ref`, a branch or tag (GIT_REF if None, then
+    the default branch): returns the PR URL, or None if the agent had nothing to change.
 
     Raises `AgentFailed` when the agent itself fails."""
 
+    ref = ref or os.environ.get("GIT_REF") or None
     git_token = os.environ.get("GIT_AUTH_TOKEN")
 
     if not git_token:
@@ -63,7 +64,7 @@ async def _fix_issue(
         ) as clone:
             repo.clone(workdir, ref=ref)
 
-            clone.output = {"path": str(workdir), "ref": ref}
+            clone.output = {"path": str(workdir), "ref": ref, "base_branch": repo.base_branch}
 
         pr_url, summary = await _ship_fix(repo, workdir, event)
 

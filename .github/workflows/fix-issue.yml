@@ -37,6 +37,7 @@ jobs:
         env:
           PYTHONUNBUFFERED: "1"
           GIT_REPO_NAME: ${{ vars.GIT_REPO_NAME }}
+          GIT_REF: ${{ vars.GIT_REF }}  # branch or tag to fix; unset means the repo's default branch
           GIT_AUTH_TOKEN: ${{ secrets.GIT_AUTH_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

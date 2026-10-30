@@ -84,6 +84,7 @@ class TestClone:
         assert commands(git_run) == [
             ["git", "clone", CLONE_URL, str(dest)],
             ["git", "-C", str(dest), "-c", "advice.detachedHead=false", "checkout", "1-bug"],
+            ["git", "-C", str(dest), "show-ref", "--verify", "--quiet", "refs/remotes/origin/1-bug"],
         ]
 
     def test_replaces_existing_dir(self, repo, git_run, tmp_path):
@@ -122,21 +123,90 @@ class TestOpenPullRequest:
         assert repo.open_pull_request("fix/x", title="t", body="b") == PR_URL
         gh_repo.create_pull.assert_called_once_with(base="main", head="fix/x", title="t", body="b")
 
+    def test_targets_base_branch(self, repo, gh_repo):
+        repo.base_branch = "develop"
+
+        repo.open_pull_request("fix/x", title="t", body="b")
+
+        gh_repo.create_pull.assert_called_once_with(base="develop", head="fix/x", title="t", body="b")
+
+
+@pytest.fixture
+def origin(tmp_path):
+    """A local bare repo: `main` with one commit tagged `v1`, plus a `develop` branch one commit ahead, tagged `dev-bug`."""
+    git("init", "--bare", "-b", "main", "origin.git", cwd=tmp_path)
+    git("clone", "origin.git", "seed", cwd=tmp_path)
+    seed = tmp_path / "seed"
+    commit = ("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-m")
+    (seed / "app.txt").write_text("buggy\n")
+    git("add", "-A", cwd=seed)
+    git(*commit, "init", cwd=seed)
+    git("tag", "v1", cwd=seed)
+    git("push", "origin", "main", "v1", cwd=seed)
+    git("checkout", "-b", "develop", cwd=seed)
+    (seed / "dev.txt").write_text("dev\n")
+    git("add", "-A", cwd=seed)
+    git(*commit, "dev", cwd=seed)
+    git("tag", "dev-bug", cwd=seed)
+    git("push", "origin", "develop", "dev-bug", cwd=seed)
+    return tmp_path / "origin.git"
+
+
+class TestBaseBranch:
+    """Real git against a local 'origin' -- no network."""
+
+    @pytest.fixture
+    def repo(self, repo, origin):
+        repo._clone_url = str(origin)
+        return repo
+
+    def test_is_default_branch_without_ref(self, repo, tmp_path):
+        repo.clone(tmp_path / "work")
+
+        assert repo.base_branch == "main"
+
+    def test_follows_cloned_branch(self, repo, tmp_path):
+        repo.clone(tmp_path / "work", ref="develop")
+
+        assert repo.base_branch == "develop"
+
+    def test_stays_default_branch_for_tag(self, repo, tmp_path):
+        repo.clone(tmp_path / "work", ref="v1")
+
+        assert repo.base_branch == "main"
+
+    def test_commit_all_compares_against_base_branch(self, repo, tmp_path):
+        """`develop` is ahead of `main`; without changes there is still nothing to ship."""
+        work = repo.clone(tmp_path / "work", ref="develop")
+
+        assert repo.commit_all(work, "fix/x", message="fix: it") is False
+
+    def test_commit_all_compares_against_cloned_tag(self, repo, tmp_path):
+        """`dev-bug` is ahead of `main`, the PR's base; without changes there is still nothing to ship."""
+        work = repo.clone(tmp_path / "work", ref="dev-bug")
+
+        assert repo.base_branch == "main"
+        assert repo.commit_all(work, "fix/x", message="fix: it") is False
+
+    def test_commit_all_ships_changes_on_cloned_tag(self, repo, tmp_path):
+        work = repo.clone(tmp_path / "work", ref="dev-bug")
+        (work / "app.txt").write_text("fixed\n")
+
+        assert repo.commit_all(work, "fix/x", message="fix: it") is True
+
+    def test_missing_ref_names_it(self, repo, tmp_path):
+        with pytest.raises(GitError, match="has no branch, tag or commit 'nope'; push it to GitHub first"):
+            repo.clone(tmp_path / "work", ref="nope")
+
 
 class TestCommitAll:
     """Real git against a local 'origin' -- no network."""
 
     @pytest.fixture
-    def workdir(self, tmp_path):
-        """A clone of a local bare repo whose `main` has one commit."""
-        git("init", "--bare", "-b", "main", "origin.git", cwd=tmp_path)
-        git("clone", "origin.git", "work", cwd=tmp_path)
-        work = tmp_path / "work"
-        (work / "app.txt").write_text("buggy\n")
-        git("add", "-A", cwd=work)
-        git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-m", "init", cwd=work)
-        git("push", "origin", "main", cwd=work)
-        return work
+    def workdir(self, origin, tmp_path):
+        """A clone of `origin`, on `main`."""
+        git("clone", str(origin), "work", cwd=tmp_path)
+        return tmp_path / "work"
 
     def test_commits_every_change_on_new_branch(self, repo, workdir):
         (workdir / "app.txt").write_text("fixed\n")
