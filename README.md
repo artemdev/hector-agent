@@ -38,7 +38,7 @@ Other commands:
 | `make evals` | Run the agent on all sample bugs     |
 | `make serve` | Start the webhook that Sentry calls  |
 
-The sample bugs live in [watchdog-fixtures](https://github.com/artemdev/watchdog-fixtures).
+The sample bugs live in [hector-fixtures](https://github.com/artemdev/hector-fixtures).
 
 ## Use it on your app
 
