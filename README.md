@@ -2,6 +2,8 @@
 
 **Hector works 24/7, turning new Sentry issues into pull requests with a fix.**
 
+https://github.com/user-attachments/assets/fbed16c5-65ab-4f90-9593-f7f2850d925e
+
 When Sentry reports a new error, Hector:
 
 1. Gets the error from Sentry
