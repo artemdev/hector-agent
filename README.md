@@ -14,6 +14,8 @@ When Sentry reports a new error, Hector:
 
 You stay in control: it never merges anything. You review the PR like any other.
 
+See [ARCHITECTURE.md](ARCHITECTURE.md) for how it works inside.
+
 ## Is it safe?
 
 - The AI only edits files. It can't push, commit or read your secrets.
