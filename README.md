@@ -1,26 +1,50 @@
 # Hector 💪
 
-**Hector works 24/7, turning new Sentry issues into pull requests with a fix.**
+**Hector works 24/7, turning production errors into pull requests with a fix and keeping you updated on Telegram in real time.**
 
 https://github.com/user-attachments/assets/b2420355-53ae-4e5e-86c0-35a9e6cf9949
 
-When Sentry reports a new error, Hector:
+## Why
+
+Production errors happen faster than anyone can fix them, especially in vibe-coded and AI-assisted projects, and often at night when no one is watching. Hector picks up each new one and opens a PR with a fix.
+
+## How it works
+
+When your error tracker (only [Sentry](https://sentry.io) for now) reports a new error, Hector:
 
 1. Gets the error from Sentry
 2. Clones your repo
-3. Lets a Claude Code AI agent find the bug, write a test for it and fix it
+3. Lets an AI agent (Claude Agent SDK) find the bug, write a test for it and fix it
 4. Opens a pull request for you to review
 5. Sends you a Telegram notification at every step
 
-You stay in control: it never merges anything. You review the PR like any other.
-
 See [ARCHITECTURE.md](ARCHITECTURE.md) for how it works inside.
 
-## Is it safe?
+## Key decisions
 
-- The AI only edits files. It can't push, commit or read your secrets.
-- It runs inside a locked Docker container and stops after 30 minutes.
-- Pushing and opening the PR is done by plain code, not by the AI.
+- **The AI only edits files. Plain code does the rest.** Cloning, committing, pushing and opening the PR are done by a Python script, not by the AI. This keeps runs predictable, and a prompt injection hidden in an error message can't push to `main`.
+- **It never merges.** You review every PR like any other. Hector saves you the boring part, not the judgement.
+- **Each fix runs in a locked Docker container on a fresh GitHub Actions runner.** Read-only filesystem, no git writes, no `.env` access, a 30-minute limit. Nothing persists between runs, and your GitHub, Telegram and app secrets never enter the container.
+- **It's tested on behaviour, not on what the AI says.** Each test case plants a real bug and checks the result on disk with a hidden test the agent never sees, so it can't pass by editing or skipping tests.
+- **It can decide not to act.** Errors that aren't your bug, such as noise from a browser extension, should end with no change rather than a made-up fix.
+
+Trade-offs: for now it supports only Sentry for errors and Node apps, with one repo per deployment.
+
+## Results
+
+Hector is tested end to end on 7 cases against a [sample app](https://github.com/artemdev/hector-fixtures):
+
+| Category  | Cases | What it checks                                                     | Passing |
+|-----------|-------|--------------------------------------------------------------------|---------|
+| fix       | 4     | Fixes the root cause, even when it's not in the top stack frame    | TODO    |
+| security  | 2     | Ignores prompt injections in the Sentry payload                    | TODO    |
+| behaviour | 1     | Leaves the code alone when the error isn't a bug in your app       | TODO    |
+
+- Average cost per fix: **TODO** (from Langfuse)
+- Average time per fix: **TODO**
+- Known limits: TODO (what it fails on or skips)
+
+See [evals/README.md](evals/README.md) for how the cases work.
 
 ## Try it
 
@@ -40,15 +64,15 @@ Other commands:
 | `make evals` | Run the agent on all sample bugs     |
 | `make serve` | Start the webhook that Sentry calls  |
 
-The sample bugs live in [hector-fixtures](https://github.com/artemdev/hector-fixtures).
-
 ## Use it on your app
 
+Hector is self-hosted: it runs on your own GitHub Actions and server.
+
 1. Fork Hector and add your GitHub token, Claude key and app repo name to the fork's Actions settings.
-2. Deploy the webhook (`make serve` with `ENV=prod`) on any server.
+2. Deploy the webhook (`make serve` with `ENV=prod`) on any server, such as Railway.
 3. In Sentry, point a webhook at `https://<your-server>/sentry`.
 
-Works with Node apps for now. See [SETUP.md](SETUP.md) for the step-by-step guide.
+See [SETUP.md](SETUP.md) for the step-by-step guide.
 
 ## Built with
 
