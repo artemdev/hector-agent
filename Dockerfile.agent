@@ -4,6 +4,11 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends git ca-certificates ripgrep \
  && rm -rf /var/lib/apt/lists/*
 
+# pnpm baked in, so pnpm repos install and test like npm ones (yarn 1 ships with the image). Not via corepack
+# or pnpm's own version switching: both download binaries at run time into a tmpfs, which can't execute them.
+RUN npm install -g --no-audit --no-fund pnpm && npm cache clean --force
+ENV pnpm_config_manage_package_manager_versions=false
+
 # Python goes to /opt, not /root, so the non-root user below can run the venv.
 ENV UV_PYTHON_INSTALL_DIR=/opt/python
 
