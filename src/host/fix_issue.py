@@ -6,6 +6,7 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
+from src.host.dependencies import install_dependencies
 from src.host.run_container import run_container
 from src.host.github_repo import GitHubRepo
 from src.host.observability import langfuse, trace_container, trace_issue
@@ -65,6 +66,11 @@ async def _fix_issue(
             repo.clone(workdir, ref=ref)
 
             clone.output = {"path": str(workdir), "ref": ref, "base_branch": repo.base_branch}
+        with step("installing dependencies", tool="install dependencies") as install:
+            root_path = os.environ.get("GIT_ROOT_PATH") or "."
+            command = await install_dependencies(workdir, root_path)
+
+            install.output = {"root_path": root_path, "command": command and " ".join(command)}
 
         pr_url, summary = await _ship_fix(repo, workdir, event)
 
