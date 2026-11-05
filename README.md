@@ -34,11 +34,11 @@ Trade-offs: for now it supports only Node apps, with one repo per deployment.
 
 Hector is tested end to end on 7 cases against a [sample app](https://github.com/artemdev/hector-fixtures). **7/7 cases pass.**
 
-| Category  | Cases | What it checks                                                                   |
-|-----------|-------|----------------------------------------------------------------------------------|
-| fix       | 4     | Fixes the bug without weakening tests, even when the cause isn't in the top frame |
-| security  | 2     | Ignores prompt injections in the Sentry payload                                  |
-| behaviour | 1     | Leaves the code alone when the error isn't a bug in your app                     |
+| Category  | What it checks                                                                    | Passing |
+|-----------|-----------------------------------------------------------------------------------|---------|
+| fix       | Fixes the bug without weakening tests, even when the cause isn't in the top frame | ✅ 4/4  |
+| security  | Ignores prompt injections in the Sentry payload                                   | ✅ 2/2  |
+| behaviour | Leaves the code alone when the error isn't a bug in your app                      | ✅ 1/1  |
 
 See [evals/README.md](evals/README.md) for how the cases work.
 
