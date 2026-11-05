@@ -4,8 +4,6 @@
 
 https://github.com/user-attachments/assets/b2420355-53ae-4e5e-86c0-35a9e6cf9949
 
-**See a real PR Hector opened:** [fix: TypeError: Cannot read properties of undefined (reading 'trim')](https://github.com/artemdev/hector-fixtures/pull/10). It finds the root cause, fixes it, and adds a test that failed before the fix.
-
 When Sentry reports a new error, Hector:
 
 1. Gets the error from Sentry
