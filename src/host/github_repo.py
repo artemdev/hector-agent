@@ -108,8 +108,9 @@ class GitHubRepo:
         if self._run_git(*git, "status", "--porcelain").stdout.strip():
             self._run_git(
                 *git,
-                "-c", "user.name=hector",
-                "-c", "user.email=hector@users.noreply.github.com",
+                # the Actions bot's noreply address: `hector@users.noreply.github.com` belongs to a real user
+                "-c", "user.name=github-actions[bot]",
+                "-c", "user.email=41898282+github-actions[bot]@users.noreply.github.com",
                 "commit", "-m", message,
             )
         ahead = self._run_git(
