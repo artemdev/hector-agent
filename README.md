@@ -4,6 +4,8 @@
 
 https://github.com/user-attachments/assets/b2420355-53ae-4e5e-86c0-35a9e6cf9949
 
+**See a real PR Hector opened:** [fix: TypeError: Cannot read properties of undefined (reading 'trim')](https://github.com/artemdev/hector-fixtures/pull/10). It finds the root cause, fixes it, and adds a test that failed before the fix.
+
 When Sentry reports a new error, Hector:
 
 1. Gets the error from Sentry
@@ -44,9 +46,11 @@ The sample bugs live in [hector-fixtures](https://github.com/artemdev/hector-fix
 
 ## Use it on your app
 
-1. Run the webhook somewhere (`make serve` with `ENV=prod`).
-2. Add your keys as secrets in this repo's GitHub settings (see `.env.example`).
+1. Fork Hector and add your GitHub token, Claude key and app repo name to the fork's Actions settings.
+2. Deploy the webhook (`make serve` with `ENV=prod`) on any server.
 3. In Sentry, point a webhook at `https://<your-server>/sentry`.
+
+Works with Node apps for now. See [SETUP.md](SETUP.md) for the step-by-step guide.
 
 ## Built with
 
@@ -54,6 +58,7 @@ Python, Claude Agent SDK, Docker, GitHub Actions, Sentry, Langfuse.
 
 ## More
 
+- [Set it up on your app](SETUP.md)
 - [How it works inside](ARCHITECTURE.md)
 - [Sample bugs and tests](evals/README.md)
 - [What's next](ROADMAP.md)
