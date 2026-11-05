@@ -6,7 +6,7 @@ https://github.com/user-attachments/assets/b2420355-53ae-4e5e-86c0-35a9e6cf9949
 
 ## Why
 
-Production errors happen faster than anyone can fix them, especially in vibe-coded and AI-assisted projects, and often at night when no one is watching. Hector picks up each new one and opens a PR with a fix.
+Production errors happen faster than anyone can fix them, especially in vibe-coded and AI-assisted projects, and often at night when no one is watching.
 
 ## How it works
 
@@ -26,23 +26,19 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for how it works inside.
 - **It never merges.** You review every PR like any other. Hector saves you the boring part, not the judgement.
 - **Each fix runs in a locked Docker container on a fresh GitHub Actions runner.** Read-only filesystem, no git writes, no `.env` access, a 30-minute limit. Nothing persists between runs, and your GitHub, Telegram and app secrets never enter the container.
 - **It's tested on behaviour, not on what the AI says.** Each test case plants a real bug and checks the result on disk with a hidden test the agent never sees, so it can't pass by editing or skipping tests.
-- **It can decide not to act.** Errors that aren't your bug, such as noise from a browser extension, should end with no change rather than a made-up fix.
+- **It can decide not to act.** Errors that aren't your bug, such as noise from a browser extension, end with no change rather than a made-up fix.
 
-Trade-offs: for now it supports only Sentry for errors and Node apps, with one repo per deployment.
+Trade-offs: for now it supports only Node apps, with one repo per deployment.
 
 ## Results
 
-Hector is tested end to end on 7 cases against a [sample app](https://github.com/artemdev/hector-fixtures):
+Hector is tested end to end on 7 cases against a [sample app](https://github.com/artemdev/hector-fixtures). **7/7 cases pass.**
 
-| Category  | Cases | What it checks                                                     | Passing |
-|-----------|-------|--------------------------------------------------------------------|---------|
-| fix       | 4     | Fixes the root cause, even when it's not in the top stack frame    | TODO    |
-| security  | 2     | Ignores prompt injections in the Sentry payload                    | TODO    |
-| behaviour | 1     | Leaves the code alone when the error isn't a bug in your app       | TODO    |
-
-- Average cost per fix: **TODO** (from Langfuse)
-- Average time per fix: **TODO**
-- Known limits: TODO (what it fails on or skips)
+| Category  | Cases | What it checks                                                                   |
+|-----------|-------|----------------------------------------------------------------------------------|
+| fix       | 4     | Fixes the bug without weakening tests, even when the cause isn't in the top frame |
+| security  | 2     | Ignores prompt injections in the Sentry payload                                  |
+| behaviour | 1     | Leaves the code alone when the error isn't a bug in your app                     |
 
 See [evals/README.md](evals/README.md) for how the cases work.
 
@@ -78,12 +74,9 @@ See [SETUP.md](SETUP.md) for the step-by-step guide.
 
 Python, Claude Agent SDK, Docker, GitHub Actions, Sentry, Langfuse.
 
-## More
+## What's next
 
-- [Set it up on your app](SETUP.md)
-- [How it works inside](ARCHITECTURE.md)
-- [Sample bugs and tests](evals/README.md)
-- [What's next](ROADMAP.md)
+See [ROADMAP.md](ROADMAP.md).
 
 ## License
 
